@@ -1,1 +1,206 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Campus Report</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/fernet@0.3.3/fernetBrowser.js"></script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+</head>
+<body>
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
+
+    <main class="app-shell">
+        <header class="topbar glass-panel">
+            <a class="brand-row" href="#report" aria-label="Secure Campus Report">
+                <span class="brand-mark">SCR</span>
+                <span>
+                    <strong>Secure Campus Report</strong>
+                    <small>Encrypted Anonymous Intake</small>
+                </span>
+            </a>
+
+            <nav class="view-tabs" aria-label="Navigasi halaman">
+                <button class="tab-button active" type="button" data-view="reportView">Form Pengaduan</button>
+                <button class="tab-button" type="button" data-view="adminView">Admin Login</button>
+            </nav>
+
+            <span id="liveClock" class="live-clock">--:--:--</span>
+        </header>
+
+        <section id="reportView" class="view-section active">
+            <div class="report-layout report-only-layout">
+                <section class="form-panel glass-panel focused-form-panel">
+                    <div class="panel-heading form-heading">
+                        <div>
+                            <p class="eyebrow">Form laporan anonim</p>
+                            <h1>Buat laporan fasilitas kampus</h1>
+                            <p>Laporan anda akan kami proses secepatnya demi kenyamanan bersama.</p>
+                        </div>
+                    </div>
+
+                    <form id="reportForm" class="incident-form">
+                        <div class="field-grid two-cols">
+                            <label>
+                                Kategori
+                                <select id="category" required>
+                                    <option value="Gedung & Ruangan">Gedung & Ruangan</option>
+                                    <option value="Listrik & Internet">Listrik & Internet</option>
+                                    <option value="Air & Sanitasi">Air & Sanitasi</option>
+                                    <option value="Keamanan">Keamanan</option>
+                                    <option value="Kebersihan">Kebersihan</option>
+                                    <option value="Lainnya">Lainnya</option>
+                                </select>
+                            </label>
+
+                            <label>
+                                Tingkat urgensi
+                                <select id="urgency" required>
+                                    <option value="Rendah">Rendah</option>
+                                    <option value="Sedang" selected>Sedang</option>
+                                    <option value="Tinggi">Tinggi</option>
+                                    <option value="Kritis">Kritis</option>
+                                </select>
+                            </label>
+                        </div>
+
+                        <label>
+                            Lokasi spesifik
+                            <input id="location" type="text" placeholder="Contoh: Gedung B lantai 2, ruang lab jaringan" required>
+                        </label>
+
+                        <label>
+                            Detail masalah
+                            <textarea id="description" placeholder="Contoh: AC ruangan mati sejak pagi, ruangan jadi panas dan praktikum terganggu." required></textarea>
+                        </label>
+
+                        <label>
+                            Dampak ke mahasiswa / aktivitas kampus
+                            <input id="impact" type="text" placeholder="Contoh: Praktikum tertunda, kelas pindah ruangan, akses toilet terganggu">
+                        </label>
+
+                        <label>
+                            Kode pelapor opsional
+                            <input id="contactCode" type="text" placeholder="Kosongkan untuk anonim penuh. Bisa isi kode pribadi, bukan nama asli.">
+                        </label>
+
+                        <div class="privacy-note">
+                            <span class="pulse-dot"></span>
+                            Mode anonim aktif. 
+                        </div>
+
+                        <button type="submit" id="submitButton">
+                            <span>Kirim laporan terenkripsi</span>
+                        </button>
+                    </form>
+
+                    <div id="statusBox" class="status-box hidden"></div>
+                </section>
+            </div>
+        </section>
+
+        <section id="adminView" class="view-section">
+            <section id="adminLoginGate" class="admin-gate glass-panel">
+                <div>
+                    <p class="eyebrow">Akses admin</p>
+                    <h1>Command Center dikunci</h1>
+                </div>
+
+                <form id="adminLoginForm" class="auth-form">
+                    <label>
+                        PIN admin
+                        <input id="adminPin" type="password" placeholder="Masukkan PIN admin" autocomplete="current-password" required>
+                    </label>
+                    <button type="submit" id="adminLoginButton">Buka Command Center</button>
+                    <div id="adminStatus" class="status-box hidden"></div>
+                </form>
+            </section>
+
+            <div id="adminContent" class="admin-content hidden">
+            <section class="admin-summary glass-panel">
+                <div>
+                    <p class="eyebrow">Command Center Admin</p>
+                    <h1>Monitoring laporan real-time</h1>
+                    <p>Selamat datang admin! Semua laporan dari form web dan hasil komunikasi client-server ditampilkan dalam antrean ticket.</p>
+                </div>
+                <div class="admin-actions"><span id="connectionBadge" class="connection-badge">Menghubungkan...</span><button id="adminLogoutButton" class="small-action" type="button">Kunci admin</button></div>
+            </section>
+
+            <section class="metric-grid">
+                <article class="metric-card glass-panel">
+                    <span>Total laporan</span>
+                    <strong id="metricTotal">{{ stats.total }}</strong>
+                    <small>Semua laporan yang tercatat</small>
+                </article>
+                <article class="metric-card glass-panel danger">
+                    <span>Kritis</span>
+                    <strong id="metricCritical">{{ stats.critical }}</strong>
+                    <small>Butuh respons tercepat</small>
+                </article>
+                <article class="metric-card glass-panel warning">
+                    <span>Prioritas tinggi</span>
+                    <strong id="metricHigh">{{ stats.high }}</strong>
+                    <small>Urgensi tinggi</small>
+                </article>
+                <article class="metric-card glass-panel">
+                    <span>Kategori dominan</span>
+                    <strong id="metricCategory">{{ stats.top_category }}</strong>
+                    <small id="metricLatest">Terakhir masuk: {{ stats.latest_time }}</small>
+                </article>
+            </section>
+
+            <section class="workspace-grid">
+                <aside class="ops-panel glass-panel">
+                    <div class="panel-heading compact">
+                        <p class="eyebrow">Filter</p>
+                        <h2>Antrean ticket</h2>
+                    </div>
+
+                    <div class="filter-stack">
+                        <button class="filter-chip active" data-filter="all">Semua</button>
+                        <button class="filter-chip" data-filter="Kritis">Kritis</button>
+                        <button class="filter-chip" data-filter="Tinggi">Tinggi</button>
+                        <button class="filter-chip" data-filter="Sedang">Sedang</button>
+                        <button class="filter-chip" data-filter="Rendah">Rendah</button>
+                    </div>
+
+                    <label class="search-label">
+                        Cari laporan
+                        <input id="searchInput" type="search" placeholder="Cari lokasi, kategori, ticket ID...">
+                    </label>
+
+                    <div class="security-card">
+                        <span class="lock-icon">●</span>
+                        <div>
+                            <strong>Encryption status</strong>
+                            <p>Payload dienkripsi dari sisi client, lalu server mendekripsi dan menyimpan JSON log.</p>
+                        </div>
+                    </div>
+                </aside>
+
+                <section class="report-board glass-panel">
+                    <div class="board-header">
+                        <div>
+                            <p class="eyebrow">Realtime intake queue</p>
+                            <h2>Daftar laporan masuk</h2>
+                        </div>
+                    </div>
+
+                    <div id="emptyState" class="empty-state">
+                        Belum ada laporan. 
+                    </div>
+
+                    <div id="reportList" class="report-list">
+                    </div>
+                </section>
+            </section>
+            </div>
+        </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
 
