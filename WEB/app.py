@@ -230,3 +230,17 @@ def api_reports():
     if not session.get("is_admin"):
         return jsonify({"status": "error", "message": "Akses admin dibutuhkan."}), 401
     return jsonify({"reports": list(reversed(reports)), "stats": build_stats()})
+
+
+@app.route("/api/health")
+def api_health():
+    return jsonify({
+        "status": "online",
+        "encryption": "Fernet symmetric encryption",
+        "transport": "HTTP + Socket.IO realtime event",
+        "total_reports": len(reports),
+    })
+
+
+if __name__ == "__main__":
+    socketio.run(app, host="0.0.0.0", port=8000, debug=True, allow_unsafe_werkzeug=True)
