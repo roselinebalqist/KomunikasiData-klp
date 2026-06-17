@@ -53,6 +53,7 @@ def safe_text(value: Any, default: str = "") -> str:
     return text[:1000]
 
 
+
 def load_reports():
     if not LOG_PATH.exists():
         return []
@@ -95,3 +96,55 @@ def generate_ticket_id(payload: Dict[str, Any], received_at: datetime) -> str:
     ])
     digest = hashlib.sha256(seed.encode("utf-8")).hexdigest().upper()
     return f"INC-{received_at.strftime('%y%m%d')}-{digest[:6]}"
+
+
+def normalize_report(payload: Dict[str, Any]) -> Dict[str, Any]:
+    received_at = datetime.now()
+    description = safe_text(payload.get("description"), "Laporan tanpa detail")
+    urgency = safe_text(payload.get("urgency"), "Sedang")
+    if urgency not in URGENCY_SCORE:
+        urgency = "Sedang"
+
+    normalized = {
+        "ticket_id": generate_ticket_id(payload, received_at),
+        "received_at": received_at.strftime("%Y-%m-%d %H:%M:%S"),
+        "source": safe_text(payload.get("source"), "Web"),
+        "sender": "Anonim",
+        "category": safe_text(payload.get("category"), "Lainnya"),
+        "location": safe_text(payload.get("location"), "Tidak disebutkan"),
+        "urgency": urgency,
+        "priority": determine_priority(urgency, description),
+        "status": "Masuk antrean verifikasi",
+        "description": description,
+        "impact": safe_text(payload.get("impact"), "Belum dijelaskan"),
+        "contact_code": safe_text(payload.get("contact_code"), "Anonim penuh"),
+    }
+    return normalized
+
+
+def build_stats():
+    total = len(reports)
+    urgency_counter = Counter(report.get("urgency", "Sedang") for report in reports)
+    category_counter = Counter(report.get("category", "Lainnya") for report in reports)
+    p1_total = sum(1 for report in reports if report.get("priority", "").startswith("P1"))
+    latest_time = reports[-1]["received_at"] if reports else "Belum ada laporan"
+
+    return {
+        "total": total,
+        "critical": urgency_counter.get("Kritis", 0),
+        "high": urgency_counter.get("Tinggi", 0),
+        "p1": p1_total,
+        "latest_time": latest_time,
+        "top_category": category_counter.most_common(1)[0][0] if category_counter else "-",
+    }
+
+
+reports.extend(load_reports())
+
+
+@app.route("/")
+def app_page():
+    return render_template("app.html", stats=build_stats())
+
+
+@app.route("/admin")
