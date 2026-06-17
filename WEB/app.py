@@ -148,3 +148,11 @@ def app_page():
 
 
 @app.route("/admin")
+def admin_page():
+    # Backward compatibility: admin tetap bisa dibuka, tapi diarahkan ke alamat utama.
+    return redirect("/#admin")
+
+
+@app.route("/api/admin/session")
+def api_admin_session():
+    return jsonify({"authenticated": bool(session.get("is_admin"))})
