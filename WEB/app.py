@@ -223,3 +223,10 @@ return jsonify({
             "status": "error",
             "message": f"Gagal memproses laporan: {exc}",
         }), 400
+
+
+@app.route("/api/reports")
+def api_reports():
+    if not session.get("is_admin"):
+        return jsonify({"status": "error", "message": "Akses admin dibutuhkan."}), 401
+    return jsonify({"reports": list(reversed(reports)), "stats": build_stats()})
