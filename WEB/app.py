@@ -47,3 +47,51 @@ KEYWORD_BOOST = [
 ]
 
 reports = []
+
+def safe_text(value: Any, default: str = "") -> str:
+    text = str(value or default).strip()
+    return text[:1000]
+
+
+def load_reports():
+    if not LOG_PATH.exists():
+        return []
+
+    loaded = []
+    with LOG_PATH.open("r", encoding="utf-8") as file:
+        for line in file:
+            try:
+                loaded.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+    return loaded
+
+
+def save_report(report: Dict[str, Any]):
+    with LOG_PATH.open("a", encoding="utf-8") as file:
+        file.write(json.dumps(report, ensure_ascii=False) + "\n")
+
+
+def determine_priority(urgency: str, description: str) -> str:
+    score = URGENCY_SCORE.get(urgency, 2)
+    lower_description = description.lower()
+
+    if any(keyword in lower_description for keyword in KEYWORD_BOOST):
+        score = min(score + 1, 4)
+
+    if score >= 4:
+        return "P1 - Tanggap cepat"
+    if score == 3:
+        return "P2 - Prioritas tinggi"
+    return "P3 - Normal"
+
+
+def generate_ticket_id(payload: Dict[str, Any], received_at: datetime) -> str:
+    seed = "|".join([
+        received_at.isoformat(),
+        payload.get("category", ""),
+        payload.get("location", ""),
+        payload.get("description", ""),
+    ])
+    digest = hashlib.sha256(seed.encode("utf-8")).hexdigest().upper()
+    return f"INC-{received_at.strftime('%y%m%d')}-{digest[:6]}"
