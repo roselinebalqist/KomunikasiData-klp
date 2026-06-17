@@ -156,3 +156,15 @@ def admin_page():
 @app.route("/api/admin/session")
 def api_admin_session():
     return jsonify({"authenticated": bool(session.get("is_admin"))})
+
+
+@app.route("/api/admin/login", methods=["POST"])
+def api_admin_login():
+    data = request.get_json(silent=True) or {}
+    pin = str(data.get("pin", "")).strip()
+
+    if pin == ADMIN_PIN:
+        session["is_admin"] = True
+        return jsonify({"status": "success", "message": "Akses admin berhasil dibuka."})
+
+    return jsonify({"status": "error", "message": "PIN admin salah."}), 401
