@@ -168,3 +168,9 @@ def api_admin_login():
         return jsonify({"status": "success", "message": "Akses admin berhasil dibuka."})
 
     return jsonify({"status": "error", "message": "PIN admin salah."}), 401
+
+
+@app.route("/api/admin/logout", methods=["POST"])
+def api_admin_logout():
+    session.pop("is_admin", None)
+    return jsonify({"status": "success", "message": "Akses admin dikunci kembali."})
