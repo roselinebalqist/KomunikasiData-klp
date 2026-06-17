@@ -181,3 +181,12 @@ def get_key():
     # Demo Komunikasi Data: key diberikan ke browser agar proses enkripsi bisa ditunjukkan dari sisi client.
     # Untuk produksi, gunakan HTTPS/TLS dan mekanisme pertukaran kunci yang lebih aman.
     return jsonify({"key": KEY_PATH.read_text().strip()})
+
+
+@app.route("/api/report", methods=["POST"])
+def receive_report():
+    data = request.get_json(silent=True) or {}
+    encrypted_report = data.get("encrypted_report")
+
+    if not encrypted_report:
+        return jsonify({"status": "error", "message": "Payload laporan kosong."}), 400
