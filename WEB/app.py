@@ -199,3 +199,27 @@ try:
         save_report(report)
 
         socketio.emit("new_report", report)
+
+return jsonify({
+            "status": "success",
+            "message": "Laporan terenkripsi berhasil diterima dan masuk antrean verifikasi.",
+            "ticket_id": report["ticket_id"],
+            "priority": report["priority"],
+            "received_at": report["received_at"],
+        })
+
+    except InvalidToken:
+        return jsonify({
+            "status": "error",
+            "message": "Token enkripsi tidak valid. Pastikan key client dan server sama.",
+        }), 400
+    except json.JSONDecodeError:
+        return jsonify({
+            "status": "error",
+            "message": "Data berhasil didekripsi, tapi format JSON tidak valid.",
+        }), 400
+    except Exception as exc:
+        return jsonify({
+            "status": "error",
+            "message": f"Gagal memproses laporan: {exc}",
+        }), 400
