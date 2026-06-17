@@ -174,3 +174,10 @@ def api_admin_login():
 def api_admin_logout():
     session.pop("is_admin", None)
     return jsonify({"status": "success", "message": "Akses admin dikunci kembali."})
+
+
+@app.route("/api/key")
+def get_key():
+    # Demo Komunikasi Data: key diberikan ke browser agar proses enkripsi bisa ditunjukkan dari sisi client.
+    # Untuk produksi, gunakan HTTPS/TLS dan mekanisme pertukaran kunci yang lebih aman.
+    return jsonify({"key": KEY_PATH.read_text().strip()})
