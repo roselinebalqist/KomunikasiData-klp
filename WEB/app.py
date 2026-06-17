@@ -190,3 +190,12 @@ def receive_report():
 
     if not encrypted_report:
         return jsonify({"status": "error", "message": "Payload laporan kosong."}), 400
+
+try:
+        decrypted_report = cipher.decrypt(encrypted_report.encode("utf-8")).decode("utf-8")
+        payload = json.loads(decrypted_report)
+        report = normalize_report(payload)
+        reports.append(report)
+        save_report(report)
+
+        socketio.emit("new_report", report)
