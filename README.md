@@ -1,4 +1,7 @@
 # KomunikasiData-klp
+Roseline Balqist-2408107010079
+Cut Farah Salsabila-2408107010100
+Najiya Irawan-2408107010092
 
 # Secure Campus Report - Chatroom Laporan Fasilitas Kampus Anonim Terenkripsi
 
