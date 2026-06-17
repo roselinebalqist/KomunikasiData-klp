@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Campus Report</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/fernet@0.3.3/fernetBrowser.js"></script>
+</head>
+<body class="client-body">
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
+
+    <main class="client-shell">
+        <section class="hero-panel glass-panel">
+            <div class="brand-row">
+                <span class="brand-mark">SCR</span>
+                <span class="brand-copy">Secure Campus Report</span>
+            </div>
+
+            <p class="eyebrow">Encrypted anonymous intake system</p>
+            <h1>Laporkan fasilitas kampus dengan format insiden yang rapi, aman, dan bisa langsung dipantau admin.</h1>
+            <p class="hero-text">
+                Sistem ini bukan sekadar kotak aduan. Setiap laporan dikirim sebagai payload terenkripsi,
+                diberi ticket ID, dipetakan berdasarkan urgensi, lalu masuk ke Command Center admin secara real-time.
+            </p>
+
+            <div class="trust-grid">
+                <article>
+                    <span>01</span>
+                    <strong>Client-side encryption</strong>
+                    <p>Isi laporan dienkripsi dulu di browser sebelum dikirim ke server.</p>
+                </article>
+                <article>
+                    <span>02</span>
+                    <strong>Incident ticketing</strong>
+                    <p>Server membuat kode tiket agar laporan mudah dilacak tanpa identitas pribadi.</p>
+                </article>
+                <article>
+                    <span>03</span>
+                    <strong>Realtime admin feed</strong>
+                    <p>Dashboard admin langsung menerima laporan baru lewat Socket.IO.</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="form-panel glass-panel">
+            <div class="panel-heading">
+                <p class="eyebrow">Anonymous form</p>
+                <h2>Buat laporan insiden</h2>
+                <p>harap isi dengan jelas.</p>
+            </div>
+
+            <form id="reportForm" class="incident-form">
+                <div class="field-grid two-cols">
+                    <label>
+                        Kategori
+                        <select id="category" required>
+                            <option value="Gedung & Ruangan">Gedung & Ruangan</option>
+                            <option value="Listrik & Internet">Listrik & Internet</option>
+                            <option value="Air & Sanitasi">Air & Sanitasi</option>
+                            <option value="Keamanan">Keamanan</option>
+                            <option value="Kebersihan">Kebersihan</option>
+                            <option value="Lainnya">Lainnya</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        Tingkat urgensi
+                        <select id="urgency" required>
+                            <option value="Rendah">Rendah</option>
+                            <option value="Sedang" selected>Sedang</option>
+                            <option value="Tinggi">Tinggi</option>
+                            <option value="Kritis">Kritis</option>
+                        </select>
+                    </label>
+                </div>
+
+                <label>
+                    Lokasi spesifik
+                    <input id="location" type="text" placeholder="Contoh: Gedung B lantai 2, ruang lab jaringan" required>
+                </label>
+
+                <label>
+                    Detail masalah
+                    <textarea id="description" placeholder="Contoh: AC ruangan mati sejak pagi, ruangan jadi panas dan praktikum terganggu." required></textarea>
+                </label>
+
+                <label>
+                    Dampak ke mahasiswa / aktivitas kampus
+                    <input id="impact" type="text" placeholder="Contoh: Praktikum tertunda, kelas pindah ruangan, akses toilet terganggu">
+                </label>
+
+                <label>
+                    Kode pelapor opsional
+                    <input id="contactCode" type="text" placeholder="Kosongkan untuk anonim penuh. Bisa isi kode pribadi, bukan nama asli.">
+                </label>
+
+                <div class="privacy-note">
+                    <span class="pulse-dot"></span>
+                    Mode anonim aktif. 
+                </div>
+
+                <button type="submit" id="submitButton">
+                    <span>Kirim laporan terenkripsi</span>
+                </button>
+            </form>
+
+            <div id="statusBox" class="status-box hidden"></div>
+        </section>
+    </main>
+
+    <script src="/static/client.js"></script>
+</body>
+</html>
