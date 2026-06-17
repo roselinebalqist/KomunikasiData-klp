@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Command Center Admin</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+</head>
+<body class="admin-body">
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
+
+    <main class="admin-shell">
+        <header class="admin-header glass-panel">
+            <div>
+                <p class="eyebrow">Secure Campus Report</p>
+                <h1>Command Center Admin</h1>
+                <p>Monitoring laporan fasilitas kampus anonim yang masuk secara terenkripsi dan real-time.</p>
+            </div>
+            <div class="header-actions">
+                <a href="/" class="ghost-button">Buka Form Client</a>
+                <span id="liveClock" class="live-clock">--:--:--</span>
+            </div>
+        </header>
+
+        <section class="metric-grid">
+            <article class="metric-card glass-panel">
+                <span>Total laporan</span>
+                <strong id="metricTotal">{{ stats.total }}</strong>
+                <small>Semua laporan yang tercatat</small>
+            </article>
+            <article class="metric-card glass-panel danger">
+                <span>Kritis</span>
+                <strong id="metricCritical">{{ stats.critical }}</strong>
+                <small>Butuh respons tercepat</small>
+            </article>
+            <article class="metric-card glass-panel warning">
+                <span>Prioritas tinggi</span>
+                <strong id="metricHigh">{{ stats.high }}</strong>
+                <small>Urgensi tinggi</small>
+            </article>
+            <article class="metric-card glass-panel">
+                <span>Kategori dominan</span>
+                <strong id="metricCategory">{{ stats.top_category }}</strong>
+                <small>Terakhir masuk: {{ stats.latest_time }}</small>
+            </article>
+        </section>
+
+        <section class="workspace-grid">
+            <aside class="ops-panel glass-panel">
+                <div class="panel-heading compact">
+                    <p class="eyebrow">Operational view</p>
+                    <h2>Filter antrean</h2>
+                </div>
+
+                <div class="filter-stack">
+                    <button class="filter-chip active" data-filter="all">Semua</button>
+                    <button class="filter-chip" data-filter="Kritis">Kritis</button>
+                    <button class="filter-chip" data-filter="Tinggi">Tinggi</button>
+                    <button class="filter-chip" data-filter="Sedang">Sedang</button>
+                    <button class="filter-chip" data-filter="Rendah">Rendah</button>
+                </div>
+
+                <label class="search-label">
+                    Cari laporan
+                    <input id="searchInput" type="search" placeholder="Cari lokasi, kategori, ticket ID...">
+                </label>
+
+                <div class="security-card">
+                    <span class="lock-icon">●</span>
+                    <div>
+                        <strong>Encryption status</strong>
+                        <p>Client mengenkripsi payload, server mendekripsi dan mencatat JSON log.</p>
+                    </div>
+                </div>
+
+                <div class="flow-list">
+                    <div><span>1</span>Client mengisi laporan</div>
+                    <div><span>2</span>Browser mengenkripsi payload</div>
+                    <div><span>3</span>Server decrypt + validasi</div>
+                    <div><span>4</span>Admin menerima event realtime</div>
+                </div>
+            </aside>
+
+            <section class="report-board glass-panel">
+                <div class="board-header">
+                    <div>
+                        <p class="eyebrow">Realtime intake queue</p>
+                        <h2>Antrean laporan</h2>
+                    </div>
+                    <span id="connectionBadge" class="connection-badge">Menghubungkan...</span>
+                </div>
+
+                <div id="emptyState" class="empty-state {% if reports %}hidden{% endif %}">
+                    Belum ada laporan.
+                </div>
+
+                <div id="reportList" class="report-list">
+                    {% for report in reports %}
+                    <article class="report-card" data-urgency="{{ report.urgency }}" data-search="{{ report.ticket_id }} {{ report.category }} {{ report.location }} {{ report.description }}">
+                        <div class="report-topline">
+                            <span class="ticket-id">{{ report.ticket_id }}</span>
+                            <span class="urgency-pill urgency-{{ report.urgency|lower }}">{{ report.urgency }}</span>
+                        </div>
+                        <h3>{{ report.category }}</h3>
+                        <p class="report-desc">{{ report.description }}</p>
+                        <dl class="report-meta">
+                            <div><dt>Lokasi</dt><dd>{{ report.location }}</dd></div>
+                            <div><dt>Prioritas</dt><dd>{{ report.priority }}</dd></div>
+                            <div><dt>Status</dt><dd>{{ report.status }}</dd></div>
+                            <div><dt>Waktu</dt><dd>{{ report.received_at }}</dd></div>
+                        </dl>
+                        <div class="impact-line"><strong>Dampak:</strong> {{ report.impact }}</div>
+                    </article>
+                    {% endfor %}
+                </div>
+            </section>
+        </section>
+    </main>
+
+    <script src="/static/admin.js"></script>
+</body>
+</html>
